@@ -601,7 +601,7 @@ class StyleManager:
                 _remap_rids(new_p, rId_map)
 
             # Force copied header/footer drawings to behave like watermark layers.
-            for anchor in new_p.findall('.//' + qn('wp:anchor')):
+            for anchor in new_p.findall(f".//{qn('wp:anchor')}"):
                 anchor.set('behindDoc', '1')
                 anchor.set('allowOverlap', '1')
 
