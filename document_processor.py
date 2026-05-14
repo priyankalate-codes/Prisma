@@ -344,7 +344,7 @@ class DocumentProcessor:
                     rest       = signals[i + 2]['text'].strip()
                     rest_clean = re.sub(r'^[\.\)]\s*', '', rest)
                     item = dict(item)
-                    item['text'] = t + '. ' + rest_clean
+                    item['text'] = f'{t}. {rest_clean}'
                     joined.append(item)
                     i += 3
                     continue
@@ -357,7 +357,7 @@ class DocumentProcessor:
                 else:
                     # Lone digit with no joinable continuation — keep as placeholder
                     item = dict(item)
-                    item['text'] = t + '.'
+                    item['text'] = f'{t}.'
                     joined.append(item)
                     i += 1
                     continue
@@ -390,7 +390,7 @@ class DocumentProcessor:
             # Lone "-" paragraph — prefix the NEXT line as a dash bullet
             elif t == '-':
                 if i + 1 < len(signals):
-                    signals[i + 1]['text'] = '- ' + signals[i + 1]['text'].lstrip('- ')
+                    signals[i + 1]['text'] = f"- {signals[i + 1]['text'].lstrip('- ')}"
                 i += 1
                 continue
 
@@ -876,5 +876,3 @@ class DocumentProcessor:
             table_html += "</tr>"
         table_html += "</table>"
         return table_html
-
-
