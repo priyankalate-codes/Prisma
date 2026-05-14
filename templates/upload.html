@@ -1,0 +1,2353 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FormatFlow | Document Workspace</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+
+    <!-- TinyMCE Rich Text Editor (Robust Table Support) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tinymce/6.8.2/tinymce.min.js"></script>
+
+    <style>
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        :root {
+            /* DARK THEME (default) */
+            --bg: #212121;
+            --sidebar-bg: #171717;
+            --surface: #2f2f2f;
+            --surface-2: #3a3a3a;
+            --border: #3a3a3a;
+            --text: #ececec;
+            --text-muted: #8e8ea0;
+            --accent: #33ccff;
+            --accent-dim: rgba(51, 204, 255, 0.15);
+            --user-bubble: #2f2f2f;
+            --radius: 14px;
+            --send-size: 36px;
+        }
+
+        [data-theme="light"] {
+            /* LIGHT THEME */
+            --bg: #ffffff;
+            --sidebar-bg: #f9f9f9;
+            --surface: #ffffff;
+            --surface-2: #f0f0f0;
+            --border: #e5e5e5;
+            --text: #0d0d0d;
+            --text-muted: #6e6e80;
+            --user-bubble: #f4f4f4;
+            --accent-dim: rgba(51, 204, 255, 0.1);
+        }
+
+        /* Override TinyMCE Default Blue Tints */
+        .tox-tinymce {
+            border: none !important;
+            border-radius: 8px !important;
+            background: transparent !important;
+        }
+
+        .tox .tox-toolbar,
+        .tox .tox-toolbar__primary,
+        .tox .tox-menubar {
+            background-color: var(--surface) !important;
+            background: var(--surface) !important;
+            border-bottom: 1px solid var(--border) !important;
+        }
+
+        .tox .tox-tbtn:hover {
+            background: var(--surface-2) !important;
+        }
+
+        .tox .tox-tbtn--enabled,
+        .tox .tox-tbtn--enabled:hover {
+            background: var(--accent-dim) !important;
+        }
+
+        .tox .tox-tbtn,
+        .tox .tox-tbtn *,
+        .tox .tox-tbtn svg {
+            color: var(--text) !important;
+            fill: var(--text) !important;
+        }
+
+        .tox .tox-tbtn--enabled,
+        .tox .tox-tbtn--enabled *,
+        .tox .tox-tbtn--enabled svg {
+            color: var(--accent) !important;
+            fill: var(--accent) !important;
+        }
+
+        .tox .tox-edit-area,
+        .tox .tox-edit-area__iframe {
+            background: transparent !important;
+        }
+
+        .tox .tox-statusbar {
+            display: none !important;
+        }
+
+        body {
+            font-family: 'Inter', system-ui, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            height: 100vh;
+            display: flex;
+            overflow: hidden;
+            transition: background 0.2s, color 0.2s;
+        }
+
+        /* ── SIDEBAR ────────────────────────────────────── */
+        #sidebar {
+            width: 260px;
+            min-width: 260px;
+            background: var(--sidebar-bg);
+            display: flex;
+            flex-direction: column;
+            padding: 12px 8px;
+            border-right: 1px solid var(--border);
+            transition: background 0.2s, border-color 0.2s;
+            z-index: 100;
+            /* Ensures the sidebar menu stays "above" the main content */
+            position: relative;
+        }
+
+        .sidebar-top {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .sb-btn {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 12px;
+            border-radius: 8px;
+            background: none;
+            border: none;
+            color: var(--text);
+            font-size: 0.875rem;
+            font-family: inherit;
+            cursor: pointer;
+            transition: background 0.15s;
+            width: 100%;
+            text-align: left;
+        }
+
+        .sb-btn:hover {
+            background: var(--surface);
+        }
+
+        .sb-btn i {
+            font-size: 1rem;
+            color: var(--text-muted);
+        }
+
+        .new-chat-btn {
+            background: var(--surface);
+            font-weight: 500;
+            margin-bottom: 4px;
+            border: 1px solid var(--border);
+        }
+
+        .new-chat-btn:hover {
+            background: var(--surface-2);
+        }
+
+        .section-label {
+            font-size: 0.82rem;
+            font-weight: 500;
+            color: var(--text-muted);
+            padding: 12px 12px 6px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        .section-label:hover {
+            color: var(--text);
+        }
+
+        .section-label i {
+            font-size: 0.75rem;
+            margin-top: 2px;
+        }
+
+        #conversation-list {
+            flex: 1;
+            overflow-y: auto;
+            margin-top: 4px;
+            scrollbar-width: thin;
+            scrollbar-color: var(--surface-2) transparent;
+        }
+
+        #conversation-list::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        #conversation-list::-webkit-scrollbar-thumb {
+            background: var(--surface-2);
+            border-radius: 8px;
+        }
+
+        .conv-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 12px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 0.94rem;
+            color: var(--text);
+            transition: background 0.15s, color 0.15s;
+            position: relative;
+            overflow: visible;
+        }
+
+        .conv-item:hover {
+            background: var(--surface);
+        }
+
+        .conv-item.active {
+            background: var(--surface-2);
+            font-weight: 500;
+        }
+
+        [data-theme="light"] .conv-item.active {
+            background: rgba(0, 0, 0, 0.07);
+        }
+
+        .conv-item span {
+            flex: 1;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            padding-right: 8px;
+        }
+
+        .conv-item i {
+            flex-shrink: 0;
+            font-size: 0.85rem;
+        }
+
+        .conv-item-more {
+            margin-left: auto;
+            opacity: 0;
+            transition: opacity 0.2s, background 0.2s;
+            padding: 4px;
+            border-radius: 6px;
+            cursor: pointer;
+            z-index: 5;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .conv-item:hover .conv-item-more {
+            opacity: 1;
+        }
+
+        .conv-item-more:hover {
+            background: var(--surface-2);
+            color: var(--text);
+        }
+
+        /* Dropdown Container */
+        .conv-actions-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .conv-actions-dropdown {
+            position: absolute;
+            top: 28px;
+            right: 0;
+            background: var(--surface-2);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+            display: none;
+            z-index: 2000;
+            min-width: 160px;
+            padding: 6px 0;
+        }
+
+        .conv-actions-dropdown.visible {
+            display: block;
+        }
+
+        .dropdown-item {
+            padding: 8px 12px;
+            font-size: 0.82rem;
+            color: var(--text);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: background 0.15s;
+        }
+
+        .dropdown-item:hover {
+            background: var(--surface);
+        }
+
+        .dropdown-item.delete {
+            color: #ff4d4d;
+        }
+
+        .dropdown-item.delete:hover {
+            background: rgba(255, 77, 77, 0.1);
+        }
+
+        .sidebar-footer {
+            margin-top: auto;
+            border-top: 1px solid var(--border);
+            padding-top: 8px;
+        }
+
+        /* ── MAIN AREA ──────────────────────────────────── */
+        #main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* Settings Bar */
+        #settings-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 16px;
+            border-bottom: 1px solid var(--border);
+            background: var(--sidebar-bg);
+            flex-shrink: 0;
+            transition: background 0.2s, border-color 0.2s;
+        }
+
+        .settings-left,
+        .settings-center,
+        .settings-right {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex: 1;
+        }
+
+        .settings-center {
+            justify-content: center;
+        }
+
+        .settings-right {
+            justify-content: flex-end;
+        }
+
+        .settings-label {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            font-weight: 600;
+            letter-spacing: 0.07em;
+            text-transform: uppercase;
+        }
+
+        .settings-sep {
+            width: 1px;
+            height: 18px;
+            background: var(--border);
+            margin: 0 4px;
+        }
+
+        .ctrl {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            color: var(--text);
+            border-radius: 6px;
+            padding: 4px 10px;
+            font-size: 0.8rem;
+            font-family: inherit;
+            cursor: pointer;
+            outline: none;
+            transition: background 0.2s, border 0.2s, color 0.2s;
+        }
+
+        .ctrl:focus {
+            border-color: var(--accent);
+        }
+
+        input[type="number"].ctrl {
+            width: 60px;
+            text-align: center;
+        }
+
+        .toggle-wrap {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            cursor: pointer;
+        }
+
+        .toggle-wrap input {
+            accent-color: var(--accent);
+            width: 14px;
+            height: 14px;
+            cursor: pointer;
+        }
+
+        .toggle-wrap:hover {
+            color: var(--text);
+        }
+
+        .theme-toggle {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            color: var(--text-muted);
+            border-radius: 8px;
+            width: 32px;
+            height: 32px;
+            cursor: pointer;
+            transition: 0.2s;
+            font-size: 0.95rem;
+        }
+
+        .theme-toggle:hover {
+            background: var(--surface-2);
+            color: var(--text);
+        }
+
+        .mode-pill {
+            display: flex;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 2px;
+            gap: 2px;
+        }
+
+        .mode-pill button {
+            padding: 4px 12px;
+            border-radius: 6px;
+            border: none;
+            background: none;
+            color: var(--text-muted);
+            font-size: 0.78rem;
+            font-family: inherit;
+            cursor: pointer;
+            transition: 0.15s;
+        }
+
+        .mode-pill button.active {
+            background: var(--surface-2);
+            color: var(--text);
+            font-weight: 500;
+        }
+
+        /* Messages */
+        #chat-scroll {
+            flex: 1;
+            overflow-y: auto;
+            height: 100%;
+            scrollbar-width: thin;
+            scrollbar-color: var(--surface-2) transparent;
+        }
+
+        #chat-scroll::-webkit-scrollbar {
+            width: 5px;
+        }
+
+        #chat-scroll::-webkit-scrollbar-thumb {
+            background: var(--surface-2);
+            border-radius: 8px;
+        }
+
+        #message-display {
+            max-width: 760px;
+            margin: 0 auto;
+            padding: 32px 20px 20px;
+            min-height: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            padding-bottom: 400px;
+            /* Space for fixed input - increased for Quill Snow */
+        }
+
+        /* Welcome */
+        #welcome-screen {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            flex: 1;
+            height: 100%;
+            gap: 16px;
+            padding-top: 10vh;
+            margin-top: 0;
+            margin-bottom: 80px;
+        }
+
+        .welcome-icon {
+            width: 56px;
+            height: 56px;
+            background: var(--accent-dim);
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.6rem;
+            color: var(--accent);
+        }
+
+        #welcome-screen h2 {
+            font-size: 1.6rem;
+            font-weight: 600;
+        }
+
+        #welcome-screen p {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            text-align: center;
+        }
+
+        .hint-chips {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-top: 8px;
+        }
+
+        .hint-chip {
+            padding: 8px 14px;
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: 0.15s;
+            background: var(--surface);
+        }
+
+        .hint-chip:hover {
+            border-color: var(--accent);
+            color: var(--text);
+        }
+
+        /* Message rows */
+        .msg-row {
+            display: flex;
+            gap: 12px;
+            animation: fadeUp 0.2s ease;
+        }
+
+        .msg-row.user {
+            flex-direction: row-reverse;
+        }
+
+        @keyframes fadeUp {
+            from {
+                opacity: 0;
+                transform: translateY(8px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .avatar.bot {
+            background: var(--accent);
+            color: #fff;
+            font-size: 1rem;
+        }
+
+        .avatar.user {
+            background: var(--surface-2);
+            color: var(--text);
+            border: 1px solid var(--border);
+        }
+
+        .bubble {
+            max-width: 80%;
+            padding: 11px 16px;
+            border-radius: 18px;
+            font-size: 0.92rem;
+            line-height: 1.65;
+            word-break: break-word;
+        }
+
+        .bubble.user {
+            background: var(--user-bubble);
+            border-top-right-radius: 4px;
+            border: 1px solid var(--border);
+        }
+
+        .bubble.bot {
+            background: transparent;
+            padding: 4px 0;
+            border-radius: 0;
+            max-width: 100%;
+            flex: 1;
+        }
+
+        .bot-name {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--accent);
+            margin-bottom: 4px;
+            letter-spacing: 0.04em;
+        }
+
+        /* Download card in bubble */
+        .result-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 14px 16px;
+            margin-top: 8px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            max-width: 400px;
+        }
+
+        .result-card .rc-title {
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: var(--text-muted);
+        }
+
+        .result-card .rc-info {
+            font-size: 0.9rem;
+            color: var(--text);
+        }
+
+        .dl-btns {
+            display: flex;
+            gap: 8px;
+        }
+
+        .dl-btn {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 7px 16px;
+            border-radius: 8px;
+            font-size: 0.83rem;
+            font-family: inherit;
+            font-weight: 500;
+            cursor: pointer;
+            border: none;
+            text-decoration: none;
+            transition: 0.15s;
+            white-space: nowrap;
+        }
+
+        .dl-btn.primary {
+            background: var(--accent);
+            color: #fff;
+        }
+
+        .dl-btn.primary:hover {
+            opacity: 0.88;
+        }
+
+        .dl-btn.secondary {
+            background: var(--surface-2);
+            color: var(--text);
+            border: 1px solid var(--border);
+        }
+
+        .dl-btn.secondary:hover {
+            background: var(--border);
+        }
+
+        /* Typing dots */
+        .typing-dots {
+            display: flex;
+            gap: 4px;
+            align-items: center;
+            padding: 4px 0;
+        }
+
+        .typing-dots span {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: var(--text-muted);
+            display: inline-block;
+            animation: bounce 1.2s infinite ease-in-out;
+        }
+
+        .typing-dots span:nth-child(2) {
+            animation-delay: 0.15s;
+        }
+
+        .typing-dots span:nth-child(3) {
+            animation-delay: 0.30s;
+        }
+
+        @keyframes bounce {
+
+            0%,
+            80%,
+            100% {
+                transform: scale(0.75);
+                opacity: 0.45;
+            }
+
+            40% {
+                transform: scale(1.1);
+                opacity: 1;
+            }
+        }
+
+        /* Input Area - Absolute perfectly centered vertically unless active */
+        #input-area {
+            position: absolute;
+            left: 50%;
+            bottom: 30px;
+            transform: translateX(-50%);
+            width: 100%;
+            max-width: 760px;
+            padding: 0 20px;
+            transition: top 0.4s ease, bottom 0.4s ease, transform 0.4s ease;
+            z-index: 100;
+        }
+
+        #input-area.centered {
+            bottom: auto;
+            top: 68%;
+            transform: translate(-50%, -50%);
+        }
+
+        .input-box {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 0;
+            /* Remove padding to let toolbar be flush */
+            overflow: hidden;
+            /* Ensure components stay inside rounded corners */
+            transition: border-color 0.2s, box-shadow 0.2s;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
+        }
+
+        [data-theme="dark"] .input-box {
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+        }
+
+        .input-box:focus-within {
+            border-color: var(--accent);
+        }
+
+        #file-drop-zone {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 40px 20px;
+            /* Increased padding */
+            border: 2px dashed var(--border);
+            border-radius: 10px;
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            margin: 12px;
+            /* Added margin for file mode */
+            cursor: pointer;
+            transition: 0.2s;
+            background: var(--bg);
+        }
+
+        #file-drop-zone.visible {
+            display: flex;
+        }
+
+        #file-drop-zone:hover,
+        #file-drop-zone.dragover {
+            border-color: var(--accent);
+            color: var(--text);
+            background: var(--accent-dim);
+        }
+
+        #file-drop-zone i {
+            font-size: 2rem;
+            color: var(--accent);
+        }
+
+        #selected-file-badge {
+            display: none;
+            align-items: center;
+            gap: 8px;
+            background: var(--accent-dim);
+            border: 1px solid var(--accent);
+            border-radius: 8px;
+            padding: 8px 12px;
+            margin: 12px;
+            margin-bottom: 0px;
+            font-size: 0.85rem;
+            color: var(--accent);
+            font-weight: 500;
+        }
+
+        #selected-file-badge.visible {
+            display: flex;
+        }
+
+        #selected-file-badge button {
+            background: none;
+            border: none;
+            color: var(--accent);
+            cursor: pointer;
+            font-size: 1rem;
+            margin-left: auto;
+            padding: 0;
+            opacity: 0.8;
+        }
+
+        #selected-file-badge button:hover {
+            opacity: 1;
+        }
+
+        /* Quill Snow Editor Customization */
+        .ql-toolbar.ql-snow {
+            border: none;
+            border-bottom: 1px solid var(--border);
+            background: var(--surface-2);
+            border-top-left-radius: var(--radius);
+            border-top-right-radius: var(--radius);
+            padding: 6px 8px;
+            /* Slightly more compact */
+        }
+
+        .ql-container.ql-snow {
+            border: none;
+            font-family: inherit;
+            font-size: 0.95rem;
+            color: var(--text);
+            min-height: 100px;
+            max-height: 300px;
+            overflow-y: auto;
+            background: transparent;
+        }
+
+        .ql-editor {
+            padding: 12px;
+            min-height: 100px;
+        }
+
+        .ql-editor.ql-blank::before {
+            color: var(--text-muted);
+            font-style: normal;
+            left: 12px;
+        }
+
+        .msg-actions {
+            position: absolute;
+            top: 6px;
+            right: 10px;
+            opacity: 0;
+            cursor: pointer;
+        }
+
+        .bubble.user:hover .msg-actions {
+            opacity: 1;
+        }
+
+        .edit-area {
+            width: 100%;
+            border: 1px solid var(--border);
+            background: var(--surface-2);
+            color: var(--text);
+            border-radius: 8px;
+            padding: 8px;
+            margin-top: 8px;
+            font-family: inherit;
+            font-size: 0.9rem;
+            outline: none;
+            resize: vertical;
+        }
+
+        .user-meta {
+            display: flex !important;
+            gap: 12px;
+            font-size: 0.78rem;
+            color: #b0b0b0; /* Improved visibility for all themes */
+            margin-top: 6px;
+            user-select: none;
+            opacity: 1 !important;
+            align-items: center;
+            z-index: 10;
+        }
+
+        .user-meta i {
+            font-size: 0.85rem;
+            margin-right: -2px;
+        }
+
+        /* Dark Mode Toolbar Overrides */
+        [data-theme="dark"] .ql-snow.ql-toolbar button .ql-stroke {
+            stroke: var(--text-muted);
+        }
+
+        [data-theme="dark"] .ql-snow.ql-toolbar button .ql-fill {
+            fill: var(--text-muted);
+        }
+
+        [data-theme="dark"] .ql-snow.ql-toolbar button:hover .ql-stroke,
+        [data-theme="dark"] .ql-snow.ql-toolbar button.ql-active .ql-stroke {
+            stroke: var(--accent);
+        }
+
+        [data-theme="dark"] .ql-snow.ql-toolbar button:hover .ql-fill,
+        [data-theme="dark"] .ql-snow.ql-toolbar button.ql-active .ql-fill {
+            fill: var(--accent);
+        }
+
+        [data-theme="dark"] .ql-snow.ql-toolbar .ql-picker {
+            color: var(--text-muted);
+        }
+
+        [data-theme="dark"] .ql-snow.ql-toolbar .ql-picker-options {
+            background-color: var(--surface-2);
+            border-color: var(--border);
+            color: var(--text);
+        }
+
+        [data-theme="dark"] .ql-snow.ql-toolbar .ql-picker-item:hover {
+            color: var(--accent);
+        }
+
+        .input-controls {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 14px 10px;
+            /* Add padding here instead */
+            justify-content: flex-end;
+            background: var(--surface);
+            border-top: 1px solid var(--border-dim, rgba(255, 255, 255, 0.05));
+        }
+
+        #sendBtn {
+            width: var(--send-size);
+            height: var(--send-size);
+            border-radius: 50%;
+            border: none;
+            cursor: pointer;
+            background: var(--accent);
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+            transition: opacity 0.2s, background 0.2s;
+            flex-shrink: 0;
+        }
+
+        #sendBtn:disabled {
+            background: var(--surface-2);
+            color: var(--text-muted);
+            cursor: not-allowed;
+        }
+
+        #sendBtn:not(:disabled):hover {
+            opacity: 0.85;
+        }
+
+        .input-hint {
+            text-align: center;
+            font-size: 0.72rem;
+            color: var(--text-muted);
+            margin-top: 8px;
+            max-width: 760px;
+            margin-inline: auto;
+        }
+
+        /* Toast notifications */
+        #toast {
+            position: fixed;
+            bottom: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.85); /* Default dark/neutral */
+            color: #fff;
+            padding: 12px 24px;
+            border-radius: 12px;
+            font-size: 0.9rem;
+            display: none;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+            z-index: 9999;
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: opacity 0.3s ease;
+        }
+
+        #toast.success {
+            background: #27ae60; /* Professional green */
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        #toast.error {
+            background: #c0392b; /* Safety red */
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        #toast.info {
+            background: var(--accent); /* Brand blue */
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .hidden {
+            display: none !important;
+        }
+        /* ----------------------------------- */
+        /* 📊 BOT CHAT BUBBLE TABLE STYLING   */
+        /* ----------------------------------- */
+        .bot-content table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 12px 0;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .bot-content th, 
+        .bot-content td {
+            border: 1px solid var(--border);
+            padding: 10px 14px;
+            text-align: left;
+            font-size: 0.875rem;
+        }
+
+        .bot-content th {
+            background-color: rgba(255, 255, 255, 0.08); 
+            font-weight: 600;
+            color: var(--accent);
+        }
+
+        .bot-content td strong {
+            color: var(--accent);
+            font-weight: 600;
+        }
+    </style>
+</head>
+
+<body data-theme="dark">
+
+    <!-- ── SIDEBAR ─────────────────────────────────────────── -->
+    <div id="sidebar">
+        <div class="sidebar-top">
+            <button class="sb-btn new-chat-btn" onclick="newChat()" id="newChatBtn">
+                <i class="bi bi-pencil-square"></i>
+                <span>New Chat</span>
+            </button>
+            <button class="sb-btn" onclick="focusSearch()" id="searchBtn">
+                <i class="bi bi-search"></i>
+                <span>Search</span>
+            </button>
+        </div>
+
+        <div class="section-label" style="margin-top: 10px;" onclick="toggleSidebarList('favList', 'favIcon')">
+            <span>Favorites</span>
+            <i class="bi bi-chevron-down" id="favIcon"></i>
+        </div>
+        <div id="favList" class="scroll-list"></div>
+
+        <div class="section-label" style="margin-top: 10px;" onclick="toggleSidebarList('chatList', 'chatIcon')">
+            <span>Your chats</span>
+            <i class="bi bi-chevron-down" id="chatIcon"></i>
+        </div>
+        <div id="chatList" class="scroll-list" style="flex: 1; overflow-y: auto;"></div>
+
+        <div class="sidebar-footer">
+            <button class="sb-btn" onclick="logout()">
+                <i class="bi bi-box-arrow-left"></i>
+                <span>Log out</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- ── MAIN ───────────────────────────────────────────── -->
+    <div id="main">
+
+        <!-- Settings Bar -->
+        <div id="settings-bar">
+            <div class="settings-left">
+                <span class="settings-label">Style</span>
+                <select id="fontFamily" class="ctrl" title="Font family">
+                    <option value="Calibri">Calibri</option>
+                    <option value="Arial">Arial</option>
+                    <option value="Times New Roman">Times New Roman</option>
+                    <option value="Georgia">Georgia</option>
+                    <option value="Verdana">Verdana</option>
+                </select>
+                <input type="number" id="fontSize" class="ctrl" value="11" min="8" max="24" title="Font size (pt)">
+                <span class="settings-sep"></span>
+                <label class="toggle-wrap" title="Add a cover page">
+                    <input type="checkbox" id="coverPage">Cover
+                </label>
+                <label class="toggle-wrap" title="Add table of contents">
+                    <input type="checkbox" id="toc">TOC
+                </label>
+            </div>
+
+
+            <div class="settings-right">
+                <div class="mode-pill">
+                    <button class="active" id="modeText" onclick="switchMode('text')">
+                        <i class="bi bi-body-text"></i> Text
+                    </button>
+                    <button id="modeFile" onclick="switchMode('file')">
+                        <i class="bi bi-file-earmark-arrow-up"></i> File
+                    </button>
+                </div>
+                <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" title="Toggle Day/Night Mode"
+                    style="margin-left: 8px;">
+                    <i class="bi bi-moon-stars-fill" id="themeIcon"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Chat Scroll Area -->
+        <div id="chat-scroll">
+            <div id="message-display">
+                <!-- Welcome Screen -->
+                <div id="welcome-screen">
+                    <div class="welcome-icon"><i class="bi bi-stars"></i></div>
+                    <h2>Welcome to FormatFlow</h2>
+                    <p>Paste text or upload a document to generate a branded DOCX or PDF.</p>
+                    <div class="hint-chips" id="welcome-hints">
+                        <div class="hint-chip" onclick="setHint('Write a project proposal for a mobile app.')">📄
+                            Project Proposal</div>
+                        <div class="hint-chip" onclick="setHint('Write a business meeting report with action items.')">
+                            📝 Meeting Report</div>
+                        <div class="hint-chip"
+                            onclick="setHint('Write a technical specification document for an API.')">⚙️ Tech Spec</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Input Area (Perfectly centered vertically and horizontally initially) -->
+        <div id="input-area" class="centered">
+            <div class="input-box">
+
+                <!-- File Mode Only: File Drop Zone (No text typing in this mode) -->
+                <div id="file-drop-zone" onclick="document.getElementById('fileInput').click()">
+                    <i class="bi bi-file-earmark-arrow-up"></i>
+                    <span>Drop a document here or click to browse</span>
+                    <small>.docx or .pdf supported</small>
+                </div>
+                <div id="selected-file-badge">
+                    <i class="bi bi-file-earmark-check"></i>
+                    <span id="file-name-label">No file</span>
+                    <button onclick="clearFile()" title="Remove file"><i class="bi bi-x-circle-fill"></i></button>
+                </div>
+
+                <!-- Text Mode Only: Rich Text Editor -->
+                <div id="textInputWrapper" style="width: 100%;">
+                    <textarea id="textInput" style="width: 100%; border: none;"></textarea>
+                </div>
+
+                <div class="input-controls">
+                    <!-- Cancel Edit Button (Initially Hidden) -->
+                    <button id="cancelEditBtn" onclick="cancelEdit()" class="hidden" title="Cancel Edit"
+                        style="background:none; border:1px solid #c0392b; color:#c0392b; border-radius:18px; padding:6px 14px; font-size:0.75rem; font-weight:600; cursor:pointer; margin-right:8px;">
+                        CANCEL EDIT
+                    </button>
+                    <!-- Only the send button remains (Attach button removed since we use Mode toggle) -->
+                    <button id="sendBtn" onclick="processEntry()" disabled title="Send">
+                        <i class="bi bi-arrow-up"></i>
+                    </button>
+                </div>
+            </div>
+            <p class="input-hint" id="inputHint">FormatFlow formats your content into a branded DOCX. Always review
+                important documents.</p>
+        </div>
+
+        <input type="file" id="fileInput" hidden accept=".docx,.pdf" onchange="handleFileSelect()">
+    </div>
+
+    <div id="toast"></div>
+
+    <script>
+        // ── STATE ──────────────────────────────────────────────
+        const apiFetch = (input, init = {}) => fetch(input, {
+            ...init,
+            credentials: 'include'
+        });
+
+        const FormatApp = {
+            currentMode: 'text',
+            selectedFile: null,
+            currentJobId: null,
+            editingHistoryId: null, // Tracks which message is being edited
+            editingUserDataId: null, // Tracks the DOM ID of the edited message row
+            isTitleLocked: false,
+            editorInstance: null,
+            isFirstLoad: true,
+            
+            // DOM Elements
+            elements: {
+                textInput: document.getElementById('textInput'),
+                sendBtn: document.getElementById('sendBtn'),
+                cancelEditBtn: document.getElementById('cancelEditBtn'), // [NEW] Cancel button
+                inputArea: document.getElementById('input-area'),
+                display: document.getElementById('message-display'),
+                chatScroll: document.getElementById('chat-scroll'),
+                welcome: document.getElementById('welcome-screen'),
+                welcomeHints: document.getElementById('welcome-hints'),
+                fileDropZone: document.getElementById('file-drop-zone'),
+                fileBadge: document.getElementById('selected-file-badge'),
+                fileLabel: document.getElementById('file-name-label'),
+                fileInput: document.getElementById('fileInput'),
+                inputHint: document.getElementById('inputHint'),
+                themeIcon: document.getElementById('themeIcon'),
+                // FIX B2: Store mode pill buttons so switchMode() can toggle them
+                modeText: document.getElementById('modeText'),
+                modeFile: document.getElementById('modeFile'),
+                textInputWrapper: document.getElementById('textInputWrapper')
+            }
+        };
+        tinymce.init({
+            selector: '#textInput',
+            height: 250,
+            menubar: false,
+            statusbar: false,
+            plugins: 'table lists advlist',
+            toolbar: 'h1 h2 h3 | bold italic underline strike | bullist numlist | table | removeformat',
+            content_style: "body { font-family: Inter, sans-serif; font-size: 14px; color: var(--text-color, #ececec); background: transparent !important; } body[data-mce-placeholder]:not(.mce-visualblocks)::before { color: var(--placeholder-color, rgba(236,236,236,0.5)) !important; opacity: 1; }",
+            skin: 'oxide-dark',
+            content_css: 'dark',
+            placeholder: 'Type or paste document content…',
+            setup: function (editor) {
+                FormatApp.editorInstance = editor;
+                editor.on('init', function () {
+                    syncIframeTheme(editor);
+                });
+                editor.on('input change keyup', function () {
+                    updateSendState();
+                    // NEW: Only update sidebar title if not locked AND chat is already saved (has jobId)
+                    if (!FormatApp.isTitleLocked && FormatApp.currentJobId) {
+                        const text = editor.getContent({ format: 'text' }).trim();
+                        const firstLine = text.split('\n')[0].trim().slice(0, 40);
+                        if (firstLine) updateActiveSidebarTitle(firstLine);
+                    }
+                });
+            }
+        });
+
+        function syncIframeTheme(editor) {
+            const isDark = document.body.getAttribute('data-theme') === 'dark';
+            editor.dom.setStyle(editor.getBody(), '--text-color', isDark ? '#ececec' : '#0d0d0d');
+            editor.dom.setStyle(editor.getBody(), '--placeholder-color', isDark ? 'rgba(236,236,236,0.5)' : 'rgba(13,13,13,0.5)');
+        }
+
+        async function renameConversation(id, event) {
+            if (event) event.stopPropagation();
+            const item = document.querySelector(`.conv-item[data-id="${id}"]`);
+            const span = item?.querySelector('span');
+            const current = span?.textContent || '';
+            const newName = prompt('Rename conversation:', current);
+            if (!id || id === 'null') {
+                showToast("This chat isn't saved yet — please paste some text or upload a file first!");
+                return;
+            }
+            if (!newName || newName.trim() === current) return;
+            try {
+                const r = await apiFetch(`/api/process/update-title/${id}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ title: newName.trim() }),
+                    credentials: 'include'
+                });
+                const res = await r.json();
+                if (res.success && span) span.textContent = newName.trim();
+                else showToast('Rename failed');
+            } catch { showToast('Connection error'); }
+        }
+
+        // Paste handling for TinyMCE is configured in the tinymce.init() call.
+
+        // ── THEME TOGGLE ───────────────────────────────────────
+        function toggleTheme() {
+            const body = document.body;
+            const icon = FormatApp.elements.themeIcon;
+            const isDark = body.getAttribute('data-theme') === 'dark';
+
+            if (isDark) {
+                body.setAttribute('data-theme', 'light');
+                if (icon) icon.className = 'bi bi-sun-fill';
+                if (FormatApp.editorInstance) syncIframeTheme(FormatApp.editorInstance);
+            } else {
+                body.setAttribute('data-theme', 'dark');
+                if (icon) icon.className = 'bi bi-moon-stars-fill';
+                if (FormatApp.editorInstance) syncIframeTheme(FormatApp.editorInstance);
+            }
+        }
+
+        // ── INIT ───────────────────────────────────────────────
+        async function initializeApp() {
+            try {
+                const r = await apiFetch('/api/process/conversations', {
+                    credentials: 'include' 
+                });
+                
+                if (!r.ok) {
+                    console.error('Failed to load conversations');
+                    if (r.status === 401) {
+                        window.location.href = '/login';
+                    }
+                    return;
+                }
+                
+                const jobs = await r.json();
+                const favList = document.getElementById('favList');
+                const chatList = document.getElementById('chatList');
+                
+                if (favList) favList.innerHTML = '';
+                if (chatList) chatList.innerHTML = '';
+                
+                (Array.isArray(jobs) ? jobs : []).forEach(job => {
+                    const targetList = job.IsFavorite ? favList : chatList;
+                    addConvItem(targetList, job.id, job.title || 'Untitled', false, job.IsFavorite);
+                });
+                
+                // ✅ AUTO-LOAD MOST RECENT CONVERSATION
+                if (jobs && jobs.length > 0) {
+                    await loadConversation(jobs[0].id);
+                }
+                
+            } catch (err) {
+                console.error('App initialization error:', err);
+            }
+        }
+
+        // Start the app
+        initializeApp();
+
+        // ── TEXT INPUT EVENTS ──────────────────────────────────
+        function updateSendState() {
+            const btn = FormatApp.elements.sendBtn;
+            if (!btn) return;
+            
+            // ✏️ UPDATE CANCEL BUTTON VISIBILITY
+            const cancelBtn = FormatApp.elements.cancelEditBtn;
+            if (cancelBtn) {
+                if (FormatApp.editingHistoryId) {
+                    cancelBtn.classList.remove('hidden');
+                    cancelBtn.style.display = 'inline-block';
+                } else {
+                    cancelBtn.classList.add('hidden');
+                    cancelBtn.style.display = 'none';
+                }
+            }
+
+            // ✏️ UPDATE SEND ICON (Arrow-Up for New, Arrow-Up-Square for Edit)
+            const sendIcon = btn.querySelector('i');
+            if (sendIcon) {
+                sendIcon.className = FormatApp.editingHistoryId ? 'bi bi-arrow-up-square' : 'bi bi-arrow-up';
+            }
+
+            if (FormatApp.currentMode === 'text') {
+                if (FormatApp.editorInstance) {
+                    btn.disabled = FormatApp.editorInstance.getContent({ format: 'text' }).trim().length === 0;
+                } else {
+                    btn.disabled = true;
+                }
+            } else {
+                btn.disabled = FormatApp.selectedFile === null;
+            }
+        }
+
+        function setHint(text) {
+            if (FormatApp.currentMode !== 'text') switchMode('text');
+            if (FormatApp.editorInstance) {
+                FormatApp.editorInstance.setContent(`<p>${text}</p>`);
+                FormatApp.editorInstance.focus();
+            }
+        }
+
+        // ── MODE SWITCH (FILE / TEXT) ──────────────────────────
+        function switchMode(mode) {
+            FormatApp.currentMode = mode;
+            const els = FormatApp.elements;
+            
+            if (els.modeText) els.modeText.classList.toggle('active', mode === 'text');
+            if (els.modeFile) els.modeFile.classList.toggle('active', mode === 'file');
+
+            if (els.fileDropZone) {
+                els.fileDropZone.classList.toggle('visible', mode === 'file' && !FormatApp.selectedFile);
+            }
+
+            if (mode === 'file') {
+                if (els.textInputWrapper) els.textInputWrapper.classList.add('hidden');
+                if (els.welcomeHints) els.welcomeHints.classList.add('hidden');
+                if (FormatApp.selectedFile && els.fileBadge) els.fileBadge.classList.add('visible');
+            } else {
+                if (els.textInputWrapper) els.textInputWrapper.classList.remove('hidden');
+                if (els.welcomeHints) els.welcomeHints.classList.remove('hidden');
+                if (els.fileBadge) els.fileBadge.classList.remove('visible');
+                if (els.fileDropZone) els.fileDropZone.classList.remove('visible');
+            }
+            updateSendState();
+        }
+
+        // ── FILE HANDLING ──────────────────────────────────────
+        function handleFileSelect() {
+            const els = FormatApp.elements;
+            const file = els.fileInput.files[0] || null;
+            if (file) {
+                FormatApp.selectedFile = file;
+                if (FormatApp.currentMode !== 'file') switchMode('file');
+                if (els.fileDropZone) els.fileDropZone.classList.remove('visible'); 
+                if (els.fileLabel) els.fileLabel.textContent = file.name;
+                if (els.fileBadge) els.fileBadge.classList.add('visible');
+
+                // Dynamic title update for files - ONLY if this is a NEW chat
+                if (!FormatApp.currentJobId) {
+                    const nameWithoutExt = file.name.replace(/\.[^/.]+$/, '');
+                    updateActiveSidebarTitle(nameWithoutExt);
+                    FormatApp.isTitleLocked = true;
+                }
+            }
+            updateSendState();
+        }
+
+        function clearFile() {
+            const els = FormatApp.elements;
+            FormatApp.selectedFile = null;
+            els.fileInput.value = '';
+            if (els.fileBadge) els.fileBadge.classList.remove('visible');
+            if (FormatApp.currentMode === 'file' && els.fileDropZone) {
+                els.fileDropZone.classList.add('visible');
+            }
+            FormatApp.isTitleLocked = false; 
+            updateSendState();
+        }
+
+        // Drag and drop for the file drop zone
+        if (FormatApp.elements.fileDropZone) {
+            FormatApp.elements.fileDropZone.addEventListener('dragover', e => { 
+                e.preventDefault(); 
+                FormatApp.elements.fileDropZone.classList.add('dragover'); 
+            });
+            FormatApp.elements.fileDropZone.addEventListener('dragleave', () => {
+                FormatApp.elements.fileDropZone.classList.remove('dragover');
+            });
+            FormatApp.elements.fileDropZone.addEventListener('drop', e => {
+                e.preventDefault(); 
+                FormatApp.elements.fileDropZone.classList.remove('dragover');
+                const f = e.dataTransfer.files[0];
+                if (f) { 
+                    FormatApp.elements.fileInput.files = e.dataTransfer.files; 
+                    handleFileSelect(); 
+                }
+            });
+        }
+
+        // ── SEND ───────────────────────────────────────────────
+        async function processEntry() {
+            const els = FormatApp.elements;
+            const htmlContent = FormatApp.currentMode === 'text' && FormatApp.editorInstance ? FormatApp.editorInstance.getContent() : '';
+            const rawContent = FormatApp.currentMode === 'text' && FormatApp.editorInstance ? FormatApp.editorInstance.getContent({ format: 'text' }).trim() : '';
+
+            if (FormatApp.currentMode === 'text' && rawContent.length === 0) return;
+            if (FormatApp.currentMode === 'file' && !FormatApp.selectedFile) return;
+
+            if (els.inputArea.classList.contains('centered')) {
+                els.inputArea.classList.remove('centered');
+                if (els.welcome) els.welcome.style.display = 'none';
+            }
+
+            const userDataId = 'usr-' + Date.now();
+            const userLabel = FormatApp.currentMode === 'file' ? `📄 File: ${FormatApp.selectedFile.name}` : rawContent;
+            appendMessage(userLabel, 'user', FormatApp.currentMode === 'file', null, userDataId, '', 1, htmlContent);
+
+            if (FormatApp.currentMode === 'text' && FormatApp.editorInstance) {
+                FormatApp.editorInstance.setContent('');
+            }
+            if (els.sendBtn) els.sendBtn.disabled = true;
+
+            const botId = 'bot-' + Date.now();
+            appendTyping(botId);
+            scrollToBottom();
+
+            await triggerBackend(htmlContent, FormatApp.currentMode === 'file', botId, rawContent, userDataId);
+
+            if (FormatApp.currentMode === 'file') {
+                clearFile();
+            } else if (FormatApp.editingHistoryId) {
+                // If it was an edit, clear the edit state after success
+                cancelEdit();
+            }
+        }
+
+        // ── BACKEND CALL ───────────────────────────────────────
+        async function triggerBackend(htmlContent, hasFile, botId, txtContent, userDataId) {
+            // ✏️ CLEAR EDIT STATE IMMEDIATELY ON SEND
+            const wasEditing = !!FormatApp.editingHistoryId;
+            const editingId = FormatApp.editingHistoryId;
+            const parentId = FormatApp.editingUserDataId; // The DOM ID of the parent (original) message
+            
+            if (wasEditing) {
+                // Clear the UI and internal flags so the next message is "new"
+                cancelEdit();
+            }
+
+            const getControl = (id) => document.getElementById(id);
+            const settings = {
+                fontFamily: getControl('fontFamily')?.value || 'Calibri',
+                fontSize: parseInt(getControl('fontSize')?.value) || 11,
+                includeCover: getControl('coverPage')?.checked || false,
+                includeTOC: getControl('toc')?.checked || false,
+            };
+
+            try {
+                let result;
+                if (hasFile) {
+                    const formData = new FormData();
+                    formData.append('file', FormatApp.selectedFile);
+                    if (FormatApp.currentJobId) formData.append('jobId', FormatApp.currentJobId);
+                    formData.append('fontFamily', settings.fontFamily);
+                    formData.append('fontSize', settings.fontSize);
+                    formData.append('includeCover', settings.includeCover);
+                    formData.append('includeTOC', settings.includeTOC);
+
+                    const r = await apiFetch('/api/process/process-file', {
+                        method: 'POST',
+                        body: formData,
+                        credentials: 'include'
+                    });
+                    result = await r.json();
+                } else {
+                    // ✏️ CHECK FOR EDIT MODE (using locals captured before cancelEdit)
+                    const url = wasEditing ? `/api/process/edit-text/${editingId}` : '/api/process/process-text';
+                    
+                    const r = await apiFetch(url, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ 
+                            text: htmlContent, 
+                            jobId: FormatApp.currentJobId, 
+                            ...settings 
+                        }),
+                        credentials: 'include'
+                    });
+                    result = await r.json();
+                }
+
+                if (result.success && result.jobId) {
+                    const isNewChat = !FormatApp.currentJobId;
+                    FormatApp.currentJobId = result.jobId;
+
+                    if (isNewChat && result.jobName) {
+                        // Update "Untitled" to the new smart title
+                        updateActiveSidebarTitle(result.jobName);
+                        // Optional: Keep it locked if you don't want it to change again
+                        FormatApp.isTitleLocked = true; 
+                    }
+                }
+
+                if (result.success && result.historyId && userDataId) {
+                    const uRow = document.getElementById(userDataId);
+                    if (uRow) {
+                        const textContainer = uRow.querySelector('.user-text-container');
+                        if (textContainer) {
+                            textContainer.dataset.historyId = result.historyId;
+                            textContainer.dataset.originalText = escapeHtml(txtContent);
+                        }
+                        const editBtn = uRow.querySelector('.edit-btn');
+                        if (editBtn) {
+                            editBtn.disabled = false;
+                            editBtn.style.opacity = '1';
+                            // Store the historyId and raw HTML content for later editing
+                            editBtn.dataset.historyId = result.historyId;
+                            editBtn.dataset.rawHtml = htmlContent || '';
+                        }
+                        const counter = uRow.querySelector('.processed-counter');
+                        if (counter && result.processingCount) {
+                            counter.textContent = result.processingCount;
+                        }
+                    }
+
+                    // 🟠 REFRESH PARENT COUNTER AS WELL
+                    if (parentId) {
+                        const pRow = document.getElementById(parentId);
+                        if (pRow) {
+                            const pCounter = pRow.querySelector('.processed-counter');
+                            if (pCounter && result.processingCount) {
+                                pCounter.textContent = result.processingCount;
+                            }
+                        }
+                    }
+                }
+
+                const fileLabel = hasFile && FormatApp.selectedFile ? FormatApp.selectedFile.name : null;
+                const labelStr = hasFile ? (fileLabel || 'Document') : txtContent;
+                replaceBotBubble(botId, result, settings, labelStr);
+
+                if (result.success) {
+                    // Reload sidebar to reflect any name changes
+                    await loadSidebar();
+                }
+            } catch (err) {
+                replaceBotError(botId, 'Network error. Please try again.');
+            } finally {
+                updateSendState();
+            }
+        }
+
+        // ── RENDER HELPERS ─────────────────────────────────────
+        function appendMessage(text, type, isFile = false, historyId = null, userDataId = null, timeStr = '', processingCount = 1, rawHtml = null) {
+            const row = document.createElement('div');
+            row.className = `msg-row ${type}`;
+            if (userDataId) row.id = userDataId;
+
+            const ava = document.createElement('div');
+            ava.className = `avatar ${type}`;
+            ava.innerHTML = type === 'bot' ? '<i class="bi bi-stars"></i>' : '<i class="bi bi-person-fill"></i>';
+
+            const bub = document.createElement('div');
+            bub.className = `bubble ${type}`;
+
+            if (type === 'bot') {
+                bub.innerHTML = `<div class="bot-name">FormatFlow AI</div><div class="bot-content">${text}</div>`;
+            } else {
+                // Always render user text with edit capability
+                // historyId may be null initially; the retroactive update sets it after processing
+                bub.style.position = 'relative';
+                // USE innerHTML if the text looks like HTML (contains tags), else stay safe with textContent
+                const containsHtml = /<[a-z][\s\S]*>/i.test(text);
+                bub.innerHTML = `
+                    <div class="user-text-container"
+                         data-history-id="${historyId || ''}"
+                         data-original-text="${escapeHtml(text)}"
+                         style="width:100%; min-width:150px;">
+                        <div class="user-text" style="white-space: pre-wrap;">${containsHtml ? text : escapeHtml(text)}</div>
+                    </div>
+                `;
+            }
+
+            if (type === 'user') {
+                const wrapper = document.createElement('div');
+                wrapper.className = 'user-bubble-wrapper';
+                wrapper.style.cssText = 'display:flex; flex-direction:column; align-items:flex-end; width:100%;';
+                wrapper.appendChild(bub);
+
+                const isActualFile = isFile || (text && text.includes('📄 Processed File:'));
+                const metaDiv = document.createElement('div');
+                metaDiv.className = 'user-meta';
+                
+                let metaHTML = `
+                    <div style="display:flex; align-items:center; gap:6px;">
+                        <i class="bi bi-clock-history"></i>
+                        <span>${toIST(timeStr || new Date())}</span>
+                    </div>
+                `;
+
+                if (!isActualFile) {
+                    metaHTML += `
+                        <div style="display:flex; align-items:center; gap:6px;">
+                            <i class="bi bi-arrow-repeat"></i>
+                            <span class="processed-counter">${processingCount || 1}</span>
+                        </div>
+                        <button class="edit-btn" title="Edit message"
+                            style="background:none; border:none; padding:0; cursor:pointer; color:inherit; display:flex; align-items:center; gap:4px; font-weight:500;"
+                            ${historyId ? '' : 'disabled'}
+                            data-history-id="${historyId || ''}"
+                            data-raw-html="${escapeHtml(rawHtml || '')}">
+                            <i class="bi bi-pencil"></i>
+                            <span>Edit</span>
+                        </button>
+                    `;
+                }
+                
+                metaDiv.innerHTML = metaHTML;
+                wrapper.appendChild(metaDiv);
+                row.appendChild(wrapper);
+                row.appendChild(ava);
+            } else {
+                const wrapper = document.createElement('div');
+                wrapper.className = 'bot-bubble-wrapper';
+                wrapper.style.cssText = 'display:flex; flex-direction:column; align-items:flex-start; width:100%;';
+                wrapper.appendChild(bub);
+
+                const metaDiv = document.createElement('div');
+                metaDiv.className = 'user-meta';
+                // Always use IST for bot responses too
+                metaDiv.innerHTML = `
+                    <div style="display:flex; align-items:center; gap:6px;">
+                        <i class="bi bi-clock-history"></i>
+                        <span>Processed at ${toIST(timeStr || new Date())}</span>
+                    </div>
+                `;
+                wrapper.appendChild(metaDiv);
+                
+                row.appendChild(ava);
+                row.appendChild(wrapper);
+            }
+
+            FormatApp.elements.display.appendChild(row);
+            scrollToBottom();
+            return row;
+        }
+
+        function appendTyping(id) {
+            const row = document.createElement('div');
+            row.className = 'msg-row bot'; row.id = id;
+
+            const ava = document.createElement('div');
+            ava.className = 'avatar bot';
+            ava.innerHTML = '<i class="bi bi-stars"></i>';
+
+            const bub = document.createElement('div');
+            bub.className = 'bubble bot';
+            bub.innerHTML = `<div class="bot-name">FormatFlow AI</div>
+            <div class="typing-dots"><span></span><span></span><span></span></div>`;
+
+            row.appendChild(ava); row.appendChild(bub);
+            FormatApp.elements.display.appendChild(row);
+        }
+
+        function replaceBotBubble(id, result, settings, content) {
+            const row = document.getElementById(id);
+            if (!row) return;
+
+            const bub = row.querySelector('.bubble.bot');
+
+            if (result.success) {
+                // RENDER AI FEEDBACK (Including summary tables)
+                bub.innerHTML = `
+                    <div class="bot-name">FormatFlow AI</div>
+                    <div class="bot-content">
+                        ${result.botResponse || 'Your document has been formatted successfully.'}
+                    </div>
+                `;
+                
+                const meta = row.querySelector('.user-meta span');
+                if (meta) {
+                    meta.textContent = `Processed at ${toIST(result.time || new Date())}`;
+                }
+
+                //SHOW RESULT SEPARATELY
+                renderResultCard(result);
+
+            } else {
+                let errorMsg = result.error;
+                if (!errorMsg && result.isProcessing) {
+                    errorMsg = 'Processing was interrupted or is still pending.';
+                } else if (!errorMsg) {
+                    errorMsg = 'Something went wrong.';
+                }
+
+                bub.innerHTML = `
+                    <div class="bot-name">FormatFlow AI</div>
+                    <div style="color:#e06c75;">
+                        ⚠ ${errorMsg}
+                    </div>
+                `;
+            }
+
+            scrollToBottom();
+        }
+
+
+        // FINAL CLEAN RESULT CARD
+        // FIX B1: Accept content parameter (used for accessibility/title in future)
+        function renderResultCard(result, content) {
+            const card = document.createElement('div');
+            card.className = 'result-card';
+
+            // FIX: Avoid "2s sec" by checking if processingTime already has a unit
+            const pTime = result.processingTime != null ? String(result.processingTime) : '';
+            const displayTime = pTime.toLowerCase().endsWith('s') || pTime.toLowerCase().endsWith('sec') ? pTime : (pTime ? pTime + ' sec' : '');
+
+            card.innerHTML = `
+                <div class="rc-title">Your document is ready</div>
+
+                ${displayTime ? `<div class="rc-meta" style="font-size: 0.82rem; color: var(--text-muted);">
+                    ⏱ Processing Time: <strong>${displayTime}</strong>
+                </div>` : ''}
+
+                <div class="dl-btns">
+                    <a href="/api/process/download/${result.historyId}?format=docx"
+                    class="dl-btn primary" download>
+                        <i class="bi bi-file-earmark-word"></i> Download DOCX
+                    </a>
+
+                    <button onclick="downloadPDF(${result.historyId}, event)"
+                        class="dl-btn secondary">
+                        <i class="bi bi-file-earmark-pdf"></i> Download PDF
+                    </button>
+                </div>
+            `;
+
+            FormatApp.elements.display.appendChild(card);
+            scrollToBottom();
+        }
+
+        // ❌ ERROR HANDLER (CLEAN)
+        function replaceBotError(id, msg) {
+            const row = document.getElementById(id);
+            if (!row) return;
+
+            row.querySelector('.bubble.bot').innerHTML = `
+                <div class="bot-name">FormatFlow AI</div>
+                <div style="color:#e06c75;">⚠ ${msg}</div>
+            `;
+        }
+
+
+
+
+        // UPDATE SIDEBAR TITLE (NO CHANGE NEEDED - JUST CLEANED)
+        async function updateActiveSidebarTitle(newTitle) {
+            const activeItem = document.querySelector('.conv-item.active');
+
+            if (activeItem) {
+                const span = activeItem.querySelector('span');
+                if (span) span.textContent = newTitle;
+
+                if (FormatApp.currentJobId) {
+                    try {
+                        await apiFetch(`/api/process/update-title/${FormatApp.currentJobId}`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ title: newTitle }),
+                            credentials: 'include'
+                        });
+                    } catch (e) {
+                        console.error("Title update failed", e);
+                    }
+                }
+            }
+        }
+
+
+        // SIDEBAR LOADER
+        async function loadSidebar() {
+            try {
+                const r = await apiFetch('/api/process/conversations', {
+                    credentials: 'include' 
+                });
+                
+                if (!r.ok) {
+                    console.error('Failed to load sidebar:', r.status);
+                    return;
+                }
+                
+                const jobs = await r.json();
+                const favList = document.getElementById('favList');
+                const chatList = document.getElementById('chatList');
+                
+                if (favList) favList.innerHTML = '';
+                if (chatList) chatList.innerHTML = '';
+                
+                (Array.isArray(jobs) ? jobs : []).forEach(job => {
+                    const targetList = job.IsFavorite ? favList : chatList;
+                    addConvItem(targetList, job.id, job.title || 'Untitled', false, job.IsFavorite);
+                });
+                
+                // Re-highlight current conversation
+                if (FormatApp.currentJobId) {
+                    const activeItem = document.querySelector(`.conv-item[data-id="${FormatApp.currentJobId}"]`);
+                    if (activeItem) activeItem.classList.add('active');
+                }
+                
+            } catch (err) {
+                console.error('Sidebar load error:', err);
+            }
+        }
+
+
+        function prependConversation(id, title) {
+            const list = document.getElementById('chatList');
+            addConvItem(list, id, title, true);
+        }
+
+        function addConvItem(list, id, title, prepend, isFavorite = false) {
+            const item = document.createElement('div');
+            item.className = 'conv-item';
+            item.dataset.id = id;
+
+            // Remove the icon for a cleaner, text-focused sidebar look as requested
+            // const icon = document.createElement('i');
+            // icon.className = 'bi bi-chat-left-text';
+
+            const span = document.createElement('span');
+            const tmp = document.createElement('div');
+            tmp.innerHTML = title;
+            span.textContent = tmp.textContent || tmp.innerText || "Document";
+
+            // More actions wrapper
+            const actionsWrapper = document.createElement('div');
+            actionsWrapper.className = 'conv-actions-wrapper';
+
+            const moreBtn = document.createElement('i');
+            moreBtn.className = 'bi bi-three-dots conv-item-more';
+            moreBtn.onclick = (e) => {
+                e.stopPropagation();
+                toggleConvDropdown(id);
+            };
+
+            const dropdown = document.createElement('div');
+            dropdown.className = 'conv-actions-dropdown';
+            dropdown.id = `dropdown-${id}`;
+            dropdown.innerHTML = `
+                <div class="dropdown-item" onclick="toggleFavorite(${id}, event)">
+                    <i class="bi bi-star${isFavorite ? '-fill text-warning' : ''}"></i> 
+                    ${isFavorite ? 'Add to All Chats' : 'Add to Favorites'}
+                </div>
+                <div class="dropdown-item" onclick="renameConversation(${id}, event)">
+                    <i class="bi bi-pencil-square"></i> Rename
+                </div>
+                <div class="dropdown-item delete" onclick="deleteConversation(${id}, event)">
+                    <i class="bi bi-trash3"></i> Delete
+                </div>
+            `;
+
+            actionsWrapper.appendChild(moreBtn);
+            actionsWrapper.appendChild(dropdown);
+
+            // item.appendChild(icon);
+            item.appendChild(span);
+            item.appendChild(actionsWrapper);
+
+            item.onclick = () => {
+                if (!id || id === 'null') {
+                    newChat();
+                    return;
+                }
+                loadConversation(id);
+            };
+            if (prepend) list.prepend(item); else list.appendChild(item);
+        }
+
+        function toggleConvDropdown(id) {
+            // Close all others first
+            document.querySelectorAll('.conv-actions-dropdown').forEach(d => {
+                if (d.id !== `dropdown-${id}`) d.classList.remove('visible');
+            });
+            const d = document.getElementById(`dropdown-${id}`);
+            if (d) d.classList.toggle('visible');
+        }
+
+        async function deleteConversation(id, event) {
+            if (event) event.stopPropagation();
+            if (!confirm("Are you sure you want to delete this chat?")) return;
+
+            // Handle unsaved "Untitled" chat locally
+            if (!id || id === 'null' || id === null) {
+                const item = document.querySelector('.conv-item[data-id="null"]');
+                if (item) item.remove();
+                newChat();
+                return;
+            }
+
+            try {
+                const r = await apiFetch(`/api/process/delete/${id}`, {
+                    method: 'DELETE',
+                    credentials: 'include'
+                });
+                const res = await r.json();
+                if (res.success) {
+                    const item = document.querySelector(`.conv-item[data-id="${id}"]`);
+                    if (item) item.remove();
+                    if (String(FormatApp.currentJobId) === String(id)) newChat();
+                } else {
+                    showToast(res.error || "Failed to delete");
+                }
+            } catch (e) {
+                showToast("Connection error");
+            }
+        }
+
+        // Close dropdowns on click outside
+        window.addEventListener('click', () => {
+            document.querySelectorAll('.conv-actions-dropdown').forEach(d => d.classList.remove('visible'));
+        });
+
+        async function toggleFavorite(id, event) {
+            if (event) event.stopPropagation();
+
+            if (!id || id === 'null' || id === null) {
+                showToast("Chat must have content before favoriting.");
+                return;
+            }
+
+            try {
+                const r = await apiFetch(`/api/process/favorite/${id}`, {
+                    method: 'POST',
+                    credentials: 'include'
+                });
+                const res = await r.json();
+
+                if (res.success) {
+                    // Reload sidebar to update star icon and order
+                    await loadSidebar();
+                    // Re-highlight active conversation
+                    if (FormatApp.currentJobId === id) {
+                        const activeItem = document.querySelector(`.conv-item[data-id="${id}"]`);
+                        if (activeItem) activeItem.classList.add('active');
+                    }
+                } else {
+                    showToast(res.error || "Failed to update favorite");
+                }
+            } catch (e) {
+                showToast("Connection error");
+            }
+        }
+
+        async function loadConversation(id) {
+            const els = FormatApp.elements;
+            try {
+                const r = await apiFetch(`/api/process/conversation/${id}`, {
+                    credentials: 'include' 
+                });
+                
+                if (!r.ok) {
+                    showToast("Could not load conversation");
+                    return;
+                }
+                
+                const history = await r.json();
+
+                // Set state
+                FormatApp.currentJobId = id;
+                FormatApp.isTitleLocked = true;
+                if (els.welcome) els.welcome.style.display = 'none';
+                
+                if (els.inputArea && els.inputArea.classList.contains('centered')) {
+                    els.inputArea.classList.remove('centered');
+                }
+                
+                // Clear existing messages
+                if (els.display) els.display.querySelectorAll('.msg-row, .result-card').forEach(e => e.remove());
+
+                // Highlight active sidebar item
+                document.querySelectorAll('.conv-item').forEach(i => i.classList.remove('active'));
+                const activeItem = document.querySelector(`.conv-item[data-id="${id}"]`);
+                if (activeItem) activeItem.classList.add('active');
+
+                // ✅ Render history properly
+                for (let msg of history) {
+                    let displayText = '';
+                    const isFile = msg.type && msg.type.toLowerCase() === 'file';
+                    
+                    if (isFile) {
+                        displayText = msg.uploadFileName || 'Document';
+                    } else {
+                        if (msg.rawText) {
+                            const tmp = document.createElement('div');
+                            tmp.innerHTML = msg.rawText;
+                            displayText = tmp.textContent || tmp.innerText || msg.summary || 'Text Input';
+                        } else {
+                            displayText = msg.summary || 'Text Input';
+                        }
+                    }
+                    
+                    // Render user message
+                    const metaTime = msg.timestamp || msg.Timestamp || msg.CreatedDate || '';
+                    appendMessage(displayText, 'user', isFile, msg.id, null, metaTime, msg.processingCount || msg.ProcessingCount || 1, msg.rawText);
+
+                    // Render bot response
+                    const isProcessing = msg.status === 'Processing' || msg.Status === 'Processing';
+                    const mock_result = {
+                        success: msg.status === 'Success' || msg.Status === 'Success',
+                        isProcessing: isProcessing,
+                        historyId: msg.id,
+                        error: isProcessing ? 'Processing was interrupted or is still pending.' : (msg.errorMessage || msg.ErrorMessage),
+                        botResponse: msg.botResponse,
+                        processingTime: msg.processingTime || msg.ProcessingTime || null,
+                        time: metaTime
+                    };
+                    
+                    const mock_settings = {
+                        fontFamily: msg.fontFamily || msg.FontFamily || 'Calibri',
+                        fontSize: msg.fontSize || msg.FontSize || 11
+                    };
+
+                    const botId = 'msg-' + msg.id;
+                    appendTyping(botId);
+                    
+                    // Small delay for better UX
+                    await new Promise(resolve => setTimeout(resolve, 50));
+                    
+                    replaceBotBubble(botId, mock_result, mock_settings, displayText);
+                }
+                
+                scrollToBottom();
+
+            } catch (e) {
+                console.error('Load conversation error:', e);
+                showToast("Failed to load conversation history.");
+            }
+        }
+
+        function newChat() {
+            const els = FormatApp.elements;
+            if (els.display) els.display.querySelectorAll('.msg-row, .result-card').forEach(e => e.remove());
+            if (els.inputArea) els.inputArea.classList.add('centered');
+            if (els.welcome) els.welcome.style.display = 'flex';
+
+            if (FormatApp.editorInstance) {
+                FormatApp.editorInstance.setContent('');
+            }
+            document.querySelectorAll('.conv-item').forEach(i => i.classList.remove('active'));
+            FormatApp.currentJobId = null;
+            FormatApp.isTitleLocked = true; // Lock 'Untitled' until first process
+
+            const list = document.getElementById('chatList');
+            if (list) {
+                const existingTemp = list.querySelector('.conv-item[data-id="null"]');
+                if (existingTemp) existingTemp.remove();
+                addConvItem(list, null, 'Untitled', true);
+                const newItem = list.querySelector('.conv-item[data-id="null"]');
+                if (newItem) newItem.classList.add('active');
+            }
+
+            clearFile();
+            switchMode('text');
+            updateSendState();
+        }
+
+        function toggleSidebarList(listId, iconId) {
+            const list = document.getElementById(listId);
+            const icon = document.getElementById(iconId);
+            if (list.style.display === 'none') {
+                list.style.display = 'block';
+                icon.className = 'bi bi-chevron-down';
+            } else {
+                list.style.display = 'none';
+                icon.className = 'bi bi-chevron-right';
+            }
+        }
+
+        // ── SEARCH ─────────────────────────────────────────────
+        function focusSearch() {
+            let searchInput = document.getElementById('sidebar-search');
+
+            if (!searchInput) {
+                searchInput = document.createElement('input');
+                searchInput.id = 'sidebar-search';
+                searchInput.type = 'text';
+                searchInput.placeholder = 'Search documents...';
+                searchInput.className = 'ctrl';
+                searchInput.style.width = '100%';
+                searchInput.style.marginBottom = '8px';
+                searchInput.style.padding = '8px 12px';
+
+                searchInput.addEventListener('input', (e) => {
+                    const term = e.target.value.toLowerCase();
+                    document.querySelectorAll('.conv-item').forEach(item => {
+                        const title = item.textContent.toLowerCase();
+                        item.style.display = title.includes(term) ? 'flex' : 'none';
+                    });
+                });
+
+                const top = document.querySelector('.sidebar-top');
+                top.parentNode.insertBefore(searchInput, top.nextSibling);
+            }
+
+            searchInput.focus();
+        }
+
+        // ── LOGOUT ─────────────────────────────────────────────
+        async function logout() {
+            await apiFetch('/api/auth/logout', { method: 'POST' });
+            window.location.replace('/login');
+        }
+
+        // ── TOAST ──────────────────────────────────────────────
+        function showToast(msg, type = 'info', ms = 3000) {
+            const t = document.getElementById('toast');
+            if (!t) return;
+            
+            t.textContent = msg;
+            t.className = ''; // Reset
+            t.classList.add(type);
+            t.style.display = 'block';
+            t.style.opacity = '1';
+            
+            setTimeout(() => {
+                t.style.opacity = '0';
+                setTimeout(() => { t.style.display = 'none'; }, 300);
+            }, ms);
+        }
+        // ── PDF DOWNLOAD HANDLER ──────────────────────────────
+        async function downloadPDF(historyId, evt) {
+            const btn = (evt && evt.currentTarget) || document.activeElement;
+            const originalHTML = btn.innerHTML;
+
+            try {
+                btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Converting...';
+                btn.disabled = true;
+
+                const response = await apiFetch(`/api/process/download/${historyId}?format=pdf`);
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || 'Conversion failed');
+                }
+
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `Document_${historyId}.pdf`;
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+                window.URL.revokeObjectURL(url);
+
+                btn.innerHTML = originalHTML;
+                btn.disabled = false;
+            } catch (err) {
+                console.error(err);
+                showToast(err.message, 'error', 5000);
+                btn.innerHTML = originalHTML;
+                btn.disabled = false;
+            }
+        }
+
+        document.addEventListener('click', async (e) => {
+            // ✏️ LOAD INTO EDITOR (New Workflow)
+            const editBtn = e.target.closest('.edit-btn');
+            if (editBtn) {
+                e.preventDefault();
+                e.stopPropagation();
+
+                const rawHtmlEncoded = editBtn.dataset.rawHtml || '';
+                if (!rawHtmlEncoded) {
+                    showToast('This message cannot be edited (missing content).');
+                    return;
+                }
+
+                // Get raw HTML from attribute
+                const rawHtml = editBtn.dataset.rawHtml || '';
+
+                // LOCK EDIT STATE
+                FormatApp.editingHistoryId = editBtn.dataset.historyId;
+                FormatApp.editingUserDataId = editBtn.closest('.msg-row').id;
+                
+                // 1. Switch to text mode
+                if (FormatApp.currentMode !== 'text') switchMode('text');
+
+                // 2. Load into TinyMCE
+                if (FormatApp.editorInstance) {
+                    FormatApp.editorInstance.setContent(rawHtml);
+                }
+
+                // 3. Clear UI "Welcome" state if needed and scroll
+                if (FormatApp.elements.inputArea.classList.contains('centered')) {
+                    FormatApp.elements.inputArea.classList.remove('centered');
+                    if (FormatApp.elements.welcome) FormatApp.elements.welcome.style.display = 'none';
+                }
+                
+                FormatApp.elements.inputArea.scrollIntoView({ behavior: 'smooth' });
+                
+                // Reactive UI update (will show cancel button and update icon)
+                updateSendState();
+                showToast('Content loaded for editing.', 'info');
+            }
+        });
+
+        // ── CANCEL EDIT ──────────────────────────────────────────
+
+        // ── CANCEL EDIT ──────────────────────────────────────────
+        function cancelEdit() {
+            FormatApp.editingHistoryId = null;
+            FormatApp.editingUserDataId = null;
+            
+            // Reset Editor
+            if (FormatApp.editorInstance) {
+                FormatApp.editorInstance.setContent('');
+            }
+
+            // Reactively update the UI (hides button, resets icon)
+            updateSendState();
+        }
+        // ── UTILS ──────────────────────────────────────────────
+        function scrollToBottom() {
+            if (FormatApp.elements.chatScroll) {
+                FormatApp.elements.chatScroll.scrollTop = FormatApp.elements.chatScroll.scrollHeight;
+            }
+        }
+
+        // SAFE HTML ESCAPE
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function toIST(dateInput) {
+            if (!dateInput) return '';
+            let date;
+            if (typeof dateInput === 'string') {
+                // Handle HH:MM AM/PM input from server (Assume it's UTC)
+                if (/^\d{1,2}:\d{2} (AM|PM)$/i.test(dateInput)) {
+                    try {
+                        const [time, period] = dateInput.split(' ');
+                        let [h, m] = time.split(':').map(Number);
+                        if (period.toUpperCase() === 'PM' && h < 12) h += 12;
+                        if (period.toUpperCase() === 'AM' && h === 12) h = 0;
+                        date = new Date();
+                        date.setUTCHours(h, m, 0, 0);
+                    } catch (e) { date = new Date(dateInput); }
+                } else {
+                    const clean = dateInput.replace(' ', 'T');
+                    date = new Date(clean.includes('Z') || clean.includes('+') ? clean : clean + 'Z');
+                }
+            } else {
+                date = dateInput;
+            }
+            if (!date || isNaN(date.getTime())) return dateInput;
+            return date.toLocaleTimeString('en-US', { timeZone: 'Asia/Kolkata', hour: '2-digit', minute: '2-digit', hour12: true });
+        }
+
+        // Force send button re-check after initialization
+        setTimeout(() => updateSendState(), 150);
+    </script>
+</body>
+
+</html>

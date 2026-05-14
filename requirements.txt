@@ -1,0 +1,29 @@
+# Flask Framework
+Flask==3.0.0
+Werkzeug==3.0.1
+requests
+
+# Auth & Security
+flask-jwt-extended==4.6.0
+flask-cors==4.0.0
+
+# Database
+flask-sqlalchemy==3.1.1
+PyMySQL==1.1.0
+
+# Environment
+python-dotenv==1.0.0
+
+# Document Processing
+python-docx==1.1.0
+beautifulsoup4==4.12.3
+
+# Image Processing
+Pillow==10.1.0
+
+# PDF conversion
+docx2pdf==0.1.8
+pywin32; platform_system == "Windows"
+
+# Additional
+python-dateutil==2.8.2
